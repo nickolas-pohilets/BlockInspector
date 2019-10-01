@@ -177,10 +177,10 @@ struct OuterArr {
 }
 
 - (void)testCaptureNonTrivialStructWithArr {
-    struct SimpleArr outerStruct;
+    struct SimpleArr s;
     
     BIBlockInspector* bi = [[BIBlockInspector alloc] initWithBlock:^{
-        NSLog(@"%p", &outerStruct);
+        NSLog(@"%p", &s);
     }];
     __auto_type elementType = [[BINonTrivialStructCapturedVariable alloc] initWithOffset:0 children:@[
         [[BIStrongCapturedVariable alloc] initWithOffset:0],
@@ -191,6 +191,35 @@ struct OuterArr {
             [[BIAssignCapturedVariable alloc] initWithOffset:8 size:8],
             [[BINonTrivialArrayCapturedVariable alloc] initWithOffset:16 elementSize:8 numberOfElements:4 elementType:elementType],
             [[BIWeakCapturedVariable alloc] initWithOffset:48],
+        ]],
+    ];
+    XCTAssertEqualObjects(bi.capturedVariables, vars);
+}
+
+- (void)testCaptureNonTrivialStructWithNestedArr {
+    struct OuterArr s;
+    
+    BIBlockInspector* bi = [[BIBlockInspector alloc] initWithBlock:^{
+        NSLog(@"%p", &s);
+    }];
+    
+    __auto_type innerElementType = [[BINonTrivialStructCapturedVariable alloc] initWithOffset:0 children:@[
+        [[BIAssignCapturedVariable alloc] initWithOffset:0 size:4],
+        [[BIStrongCapturedVariable alloc] initWithOffset:8],
+        [[BIAssignCapturedVariable alloc] initWithOffset:16 size:1],
+        [[BIWeakCapturedVariable alloc] initWithOffset:24],
+        [[BIAssignCapturedVariable alloc] initWithOffset:32 size:1],
+    ]];
+    __auto_type outerElementType = [[BINonTrivialStructCapturedVariable alloc] initWithOffset:0 children:@[
+        [[BIStrongCapturedVariable alloc] initWithOffset:0],
+        [[BINonTrivialArrayCapturedVariable alloc] initWithOffset:8 elementSize:40 numberOfElements:2 elementType:innerElementType],
+        [[BIWeakCapturedVariable alloc] initWithOffset:88],
+    ]];
+    NSArray<BICapturedVariable *> *vars = @[
+        [[BINonTrivialStructCapturedVariable alloc] initWithOffset:32 children:@[
+            [[BIWeakCapturedVariable alloc] initWithOffset:0],
+            [[BINonTrivialArrayCapturedVariable alloc] initWithOffset:8 elementSize:96 numberOfElements:2 elementType:outerElementType],
+            [[BIStrongCapturedVariable alloc] initWithOffset:200],
         ]],
     ];
     XCTAssertEqualObjects(bi.capturedVariables, vars);
