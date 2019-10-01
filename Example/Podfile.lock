@@ -1,0 +1,16 @@
+PODS:
+  - BlockInspector (0.1.0)
+
+DEPENDENCIES:
+  - BlockInspector (from `../`)
+
+EXTERNAL SOURCES:
+  BlockInspector:
+    :path: "../"
+
+SPEC CHECKSUMS:
+  BlockInspector: c0096fbbc54ef9662e157ccfb518a43578ad3a1d
+
+PODFILE CHECKSUM: 6f8944e06fe0036baf46a30eeb20ab002502688d
+
+COCOAPODS: 1.5.3

@@ -1,13 +1,10 @@
 use_frameworks!
 
-platform :ios, '8.0'
+platform :ios, '11.0'
 
 target 'BlockInspector_Example' do
-  pod 'BlockInspector', :path => '../'
-
   target 'BlockInspector_Tests' do
     inherit! :search_paths
-
-    
+    pod 'BlockInspector', :path => '../'
   end
 end
