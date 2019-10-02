@@ -60,7 +60,12 @@ typedef NS_ENUM(NSInteger, BICapturedVariableKind) {
 
 @interface BIByrefCapturedVariable: BICapturedVariable
 
-- (instancetype)initWithOffset:(NSInteger)offset;
+- (instancetype)initWithOffset:(NSInteger)offset
+                   valueOffset:(NSInteger)valueOffset
+                     valueSize:(NSInteger)valueSize;
+
+@property (nonatomic, readonly) NSInteger valueOffset;
+@property (nonatomic, readonly) NSInteger valueSize;
 
 @end
 

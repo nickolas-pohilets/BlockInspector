@@ -130,8 +130,24 @@
 
 @implementation BIByrefCapturedVariable
 
-- (instancetype)initWithOffset:(NSInteger)offset {
-    return [self initWithOffset:offset size:sizeof(void*) kind:BICapturedVariableKindByref];
+- (instancetype)initWithOffset:(NSInteger)offset
+                   valueOffset:(NSInteger)valueOffset
+                     valueSize:(NSInteger)valueSize {
+    self = [self initWithOffset:offset size:sizeof(void*) kind:BICapturedVariableKindByref];
+    if (self) {
+        _valueOffset = valueOffset;
+        _valueSize = valueSize;
+    }
+    return self;
+}
+
+- (BOOL)isEqual:(id)object {
+    BIByrefCapturedVariable *other = object;
+    return [super isEqual:object] && _valueOffset == other->_valueOffset && _valueSize == other->_valueSize;
+}
+
+- (NSString *)subclassDescription {
+    return [NSString stringWithFormat:@" valueOffset=%lld valueSize=%lld", (long long)_valueOffset, (long long)_valueSize];
 }
 
 @end

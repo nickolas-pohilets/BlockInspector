@@ -22,6 +22,20 @@ static BOOL AreEqual(id a, id b) {
     return (a == b) || [a isEqual:b];
 }
 
+typedef struct {
+    BIBlockDescriptor* blockDescriptor;
+    BIBlockDescriptorHelperFunctions *helperFunctions;
+    BIBlockDescriptorSignature *signature;
+    BIBlockDescriptorLayout *extendedLayout;
+} ParsedBlockDescriptor;
+
+typedef struct {
+    BIByrefVariable* byrefVar;
+    BIByrefVariableHelperFunctions *helperFunctions;
+    BIByrefVariableLayout *extendedLayout;
+    void *data;
+} ParsedByrefVariable;
+
 @implementation BIBlockInspector
 
 + (NSString *)nameOfFunction:(void *)function {
@@ -67,20 +81,46 @@ static BOOL AreEqual(id a, id b) {
     return self.blockLiteral->invoke;
 }
 
-- (BIBlockCopyHelper)copyHelper {
-    if (self.blockLiteral->flags & BLOCK_HAS_COPY_DISPOSE) {
-        return self.blockDescriptor->copy_helper;
+- (ParsedBlockDescriptor)parsedBlockDescriptor {
+    let flags = self.blockLiteral->flags;
+    ParsedBlockDescriptor result;
+    result.blockDescriptor = self.blockDescriptor;
+    char * ptr = (char *)result.blockDescriptor;
+    ptr += sizeof(BIBlockDescriptor);
+    
+    if (flags.hasCopyDispose) {
+        result.helperFunctions = (BIBlockDescriptorHelperFunctions *)ptr;
+        ptr += sizeof(BIBlockDescriptorHelperFunctions);
     } else {
-        return nil;
+        result.helperFunctions = NULL;
     }
+    
+    if (flags.hasSignature) {
+        result.signature = (BIBlockDescriptorSignature *)ptr;
+        ptr += sizeof(BIBlockDescriptorSignature);
+    } else {
+        result.signature = NULL;
+    }
+    
+    if (flags.hasExtendedLayout) {
+        result.extendedLayout = (BIBlockDescriptorLayout *)ptr;
+        ptr += sizeof(BIBlockDescriptorLayout);
+    } else {
+        NSAssert(!flags.hasCopyDispose, @"No extended layout");
+        result.extendedLayout = NULL;
+    }
+    
+    return result;
+}
+
+- (BIBlockCopyHelper)copyHelper {
+    BIBlockDescriptorHelperFunctions* funcs = [self parsedBlockDescriptor].helperFunctions;
+    return funcs ? funcs->copy_helper : NULL;
 }
 
 - (BIBlockDisposeHelper)disposeHelper {
-    if (self.blockLiteral->flags & BLOCK_HAS_COPY_DISPOSE) {
-        return self.blockDescriptor->dispose_helper;
-    } else {
-        return nil;
-    }
+    BIBlockDescriptorHelperFunctions* funcs = [self parsedBlockDescriptor].helperFunctions;
+    return funcs ? funcs->dispose_helper : NULL;
 }
 
 - (NSString *)nameOfInvoke {
@@ -100,18 +140,18 @@ static BOOL AreEqual(id a, id b) {
 }
 
 - (BOOL)isNoEscape {
-    return self.blockLiteral->flags & BLOCK_IS_NOESCAPE;
+    return self.blockLiteral->flags.isNoEscape;
 }
 
 - (BOOL)isGlobal {
-    int flags = self.blockLiteral->flags;
-    return (flags & BLOCK_IS_GLOBAL) && !(flags & BLOCK_IS_NOESCAPE);
+    let flags = self.blockLiteral->flags;
+    return flags.isGlobal && !flags.isNoEscape;
 }
 
 - (BOOL)hasStructReturn {
-    int flags = self.blockLiteral->flags;
-    NSAssert(flags & BLOCK_HAS_SIGNATURE, @"BLOCK_HAS_STRET cannot be trusted in old ABI");
-    return (flags & BLOCK_HAS_SIGNATURE) && (flags & BLOCK_HAS_STRET);
+    let flags = self.blockLiteral->flags;
+    NSAssert(flags.hasSignature, @"BLOCK_HAS_STRET cannot be trusted in old ABI");
+    return flags.hasSignature && flags.useStructRect;
 }
 
 - (BOOL)hasSignature {
@@ -119,17 +159,8 @@ static BOOL AreEqual(id a, id b) {
 }
 
 - (const char *)signatureEncoding {
-    int flags = self.blockLiteral->flags;
-    BIBlockDescriptor *descriptor = self.blockDescriptor;
-    if (flags & BLOCK_HAS_SIGNATURE) {
-        if (flags & BLOCK_HAS_COPY_DISPOSE) {
-            return descriptor->signature;
-        } else {
-            return (char const *)descriptor->copy_helper;
-        }
-    } else {
-        return nil;
-    }
+    BIBlockDescriptorSignature* sig = [self parsedBlockDescriptor].signature;
+    return sig ? sig->signature : NULL;
 }
 
 - (NSMethodSignature *)signature {
@@ -197,12 +228,42 @@ static BOOL AreEqual(id a, id b) {
        case 'c': return [self parseCxxCaptureVariable:s offset:offset];
        case 'w': return [[BIWeakCapturedVariable alloc] initWithOffset:offset];
        case 's': return [[BIStrongCapturedVariable alloc] initWithOffset:offset];
-       case 'r': return [[BIByrefCapturedVariable alloc] initWithOffset:offset];
+       case 'r': return [self inspectByrefCapturedVariableWithOffset:offset];
        case 'b': return [[BIBlockCapturedVariable alloc] initWithOffset:offset];
        case 'o': return [self parsingFailure];
        case 'n': return [self parseNonTrivialStructCaptureVariable:s offset:offset];
        default: return [self parsingFailure];
     }
+}
+
+- (ParsedByrefVariable)parseByrefVariable:(BIByrefVariable *)byrefVar {
+    ParsedByrefVariable result;
+    result.byrefVar = byrefVar;
+    char* ptr = (char *)byrefVar;
+    ptr += sizeof(BIByrefVariable);
+    
+    let flags = byrefVar->forwarding->flags;
+    if (flags.hasCopyDispose) {
+        result.helperFunctions = (BIByrefVariableHelperFunctions *)ptr;
+        ptr += sizeof(BIByrefVariableHelperFunctions);
+    }
+    if (flags.layout == BIByrefLayoutExtended) {
+        result.extendedLayout = (BIByrefVariableLayout *)ptr;
+        ptr += sizeof(BIByrefVariableLayout);
+    }
+    result.data = ptr;
+    return result;
+}
+
+- (nullable BIByrefCapturedVariable *)inspectByrefCapturedVariableWithOffset:(NSInteger)offset {
+    let byrefVar = *(BIByrefVariable **)((char *)self.blockLiteral + offset);
+    let parsed = [self parseByrefVariable:byrefVar];
+    
+    NSInteger valueOffset = (char *)parsed.data - (char *)byrefVar;
+    NSInteger valueSize = byrefVar->forwarding->size - valueOffset;
+    return [[BIByrefCapturedVariable alloc] initWithOffset:offset
+                                               valueOffset:valueOffset
+                                                 valueSize:valueSize];
 }
 
 - (nullable NSString *)scanStringOfLength:(NSUInteger)length from:(NSScanner *)s {

@@ -28,7 +28,7 @@ struct Outer {
 
 struct SimpleArr {
     __weak id obj1;
-    void *dummy;
+    __unsafe_unretained id dummy;
     id arr[4];
     __weak id obj2;
 };
@@ -221,6 +221,31 @@ struct OuterArr {
             [[BINonTrivialArrayCapturedVariable alloc] initWithOffset:8 elementSize:96 numberOfElements:2 elementType:outerElementType],
             [[BIStrongCapturedVariable alloc] initWithOffset:200],
         ]],
+    ];
+    XCTAssertEqualObjects(bi.capturedVariables, vars);
+}
+
+- (void)testByref {
+    __block BOOL x1 = YES;
+    __block CGRect x2 = CGRectMake(1, 2, 3, 4);
+    __block id x3 = [NSNull null];
+    __block __weak id x4 = @"foo";
+    __block void (^x5)(void) = ^{};
+    __block __unsafe_unretained id x6 = @"bar";
+    __block struct SimpleArr x7 = {};
+    
+    BIBlockInspector* bi = [[BIBlockInspector alloc] initWithBlock:^{
+        NSLog(@"%c %@ %@ %@ %@ %@ %@", x1 ? 'Y' : 'N', NSStringFromCGRect(x2), x3, x4, x5, x6, x7.arr[3]);
+    }];
+    
+    NSArray<BICapturedVariable *> *vars = @[
+        [[BIByrefCapturedVariable alloc] initWithOffset:32 valueOffset:24 valueSize:8],
+        [[BIByrefCapturedVariable alloc] initWithOffset:40 valueOffset:32 valueSize:32],
+        [[BIByrefCapturedVariable alloc] initWithOffset:48 valueOffset:40 valueSize:8],
+        [[BIByrefCapturedVariable alloc] initWithOffset:56 valueOffset:40 valueSize:8],
+        [[BIByrefCapturedVariable alloc] initWithOffset:64 valueOffset:40 valueSize:8],
+        [[BIByrefCapturedVariable alloc] initWithOffset:72 valueOffset:24 valueSize:8],
+        [[BIByrefCapturedVariable alloc] initWithOffset:80 valueOffset:48 valueSize:56],
     ];
     XCTAssertEqualObjects(bi.capturedVariables, vars);
 }
