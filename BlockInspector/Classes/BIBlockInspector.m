@@ -102,7 +102,7 @@ typedef struct {
         result.extendedLayout = (BIBlockDescriptorLayout *)ptr;
         ptr += sizeof(BIBlockDescriptorLayout);
     } else {
-        NSAssert(!flags.hasCopyDispose, @"No extended layout");
+//        NSAssert(!flags.hasCopyDispose, @"No extended layout");
         result.extendedLayout = NULL;
     }
     

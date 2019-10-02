@@ -9,6 +9,7 @@
 #import <XCTest/XCTest.h>
 #import <BlockInspector/BIBlockInspector.h>
 #import "CxxBlock.h"
+#import "BlockInspector_Tests-Swift.h"
 
 struct Inner {
     BOOL d1;
@@ -261,6 +262,12 @@ struct OuterArr {
     XCTAssertEqualObjects(bi.capturedVariables, vars);
 }
 
+- (void)testCaptureSwift {
+    // Bridged Swift blocks have neither descriptively named helper functions, nor extended layout.
+    // Maybe we could use Swift metadata?
+    BIBlockInspector *bi = [[BIBlockInspector alloc] initWithBlock:[SwiftBlock getBlock]];
+    XCTAssertNil(bi.capturedVariables);
+}
 
 @end
 

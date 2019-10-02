@@ -7,7 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4A1E11F523426FE300325C77 /* CxxBlock.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4A1E11F423426FE300325C77 /* CxxBlock.mm */; };
+		4A5FED912344B82E0078D33F /* CxxBlock.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4A1E11F423426FE300325C77 /* CxxBlock.mm */; };
+		4A5FED942344CE4F0078D33F /* SwiftBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A5FED932344CE4F0078D33F /* SwiftBlock.swift */; };
 		6003F58E195388D20070C39A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F58D195388D20070C39A /* Foundation.framework */; };
 		6003F590195388D20070C39A /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F58F195388D20070C39A /* CoreGraphics.framework */; };
 		6003F592195388D20070C39A /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F591195388D20070C39A /* UIKit.framework */; };
@@ -42,6 +43,7 @@
 		42E9E8A50C8F43B7BDDED6B2 /* Pods_BlockInspector_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_BlockInspector_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		4A1E11F323426FE300325C77 /* CxxBlock.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CxxBlock.h; sourceTree = "<group>"; };
 		4A1E11F423426FE300325C77 /* CxxBlock.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = CxxBlock.mm; sourceTree = "<group>"; };
+		4A5FED932344CE4F0078D33F /* SwiftBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftBlock.swift; sourceTree = "<group>"; };
 		5DB5B3DEBFE04F2C844E576A /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = LICENSE; path = ../LICENSE; sourceTree = "<group>"; };
 		6003F58A195388D20070C39A /* BlockInspector_Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BlockInspector_Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6003F58D195388D20070C39A /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -163,6 +165,7 @@
 				4A1E11F323426FE300325C77 /* CxxBlock.h */,
 				4A1E11F423426FE300325C77 /* CxxBlock.mm */,
 				6003F5BB195388D20070C39A /* Tests.m */,
+				4A5FED932344CE4F0078D33F /* SwiftBlock.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -240,6 +243,7 @@
 				ORGANIZATIONNAME = "Mykola Pokhylets";
 				TargetAttributes = {
 					6003F5AD195388D20070C39A = {
+						LastSwiftMigration = 1110;
 						TestTargetID = 6003F589195388D20070C39A;
 					};
 				};
@@ -362,7 +366,6 @@
 				6003F59E195388D20070C39A /* BIAppDelegate.m in Sources */,
 				6003F5A7195388D20070C39A /* BIViewController.m in Sources */,
 				6003F59A195388D20070C39A /* main.m in Sources */,
-				4A1E11F523426FE300325C77 /* CxxBlock.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -371,6 +374,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				6003F5BC195388D20070C39A /* Tests.m in Sources */,
+				4A5FED942344CE4F0078D33F /* SwiftBlock.swift in Sources */,
+				4A5FED912344B82E0078D33F /* CxxBlock.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -510,6 +515,7 @@
 			baseConfigurationReference = 3767486D500D1700FC93E6DE /* Pods-BlockInspector_Tests.debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_MODULES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(PLATFORM_DIR)/Developer/Library/Frameworks",
 					"$(inherited)",
@@ -520,8 +526,10 @@
 					"$(inherited)",
 				);
 				INFOPLIST_FILE = "Tests/Tests-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.demo.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 4.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BlockInspector_Example.app/BlockInspector_Example";
 				WRAPPER_EXTENSION = xctest;
@@ -533,12 +541,14 @@
 			baseConfigurationReference = E6F195CAF3818BE528752E86 /* Pods-BlockInspector_Tests.release.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_MODULES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(PLATFORM_DIR)/Developer/Library/Frameworks",
 					"$(inherited)",
 					"$(DEVELOPER_FRAMEWORKS_DIR)",
 				);
 				INFOPLIST_FILE = "Tests/Tests-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.demo.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.0;
