@@ -250,42 +250,17 @@ struct OuterArr {
     XCTAssertEqualObjects(bi.capturedVariables, vars);
 }
 
-//- (void)testCaptureObject {
-//    __strong id s = @"foo";
-//    id b = ^{};
-//    int k = 42;
-//    CGRect rect = CGRectMake(1, 2, 3, 4);
-//    BOOL fl;
-//    void* ptr = &ptr;
-//    __weak id w = s;
-//    __unsafe_unretained id o = s;
-//    struct Inner nts1;
-//    struct Outer nts2;
-//    __block int rk = 0;
-//    __block id rs = @"bar";
-//    __block __weak id rw = rs;
-//    __block struct Outer rnts;
-//    
-//    BIBlockInspector* bi = [[BIBlockInspector alloc] initWithBlock:^{
-//        NSLog(@"%@ %@ %d %@ %c %p %@ %@ %@ %@ %d %@ %@ %@",
-//              s, b, k, NSStringFromCGRect(rect), fl ? 'Y' : 'N', ptr,
-//              w, o, nts1.obj1, nts2.obj2, rk, rs, rw, rnts.obj1
-//        );
-//        return @[];
-//    }];
-//    XCTAssertFalse(bi.isNoEscape);
-//    XCTAssertFalse(bi.isGlobal);
-//    XCTAssertFalse(bi.hasStructReturn);
-//    XCTAssertTrue(bi.hasSignature);
-//    XCTAssert(strcmp(bi.signatureEncoding, "@\"NSArray\"8@?0") == 0);
-//    XCTAssertEqualObjects(bi.nameOfInvoke, @"__26-[Tests testCaptureObject]_block_invoke");
-//    XCTAssertEqualObjects(bi.nameOfCopyHelper, @"__copy_helper_block_ea8_32s40s48r56r64r72r80w88c89_ZTSNSt3__16vectorINS_12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEENS4_IS6_EEEE160c22_ZTS16NonTrivialStruct");
-//    XCTAssertEqualObjects(bi.nameOfDisposeHelper, @"__destroy_helper_block_ea8_32s40s48r56r64r72r80w88c89_ZTSNSt3__16vectorINS_12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEENS4_IS6_EEEE160c22_ZTS16NonTrivialStruct");
-//    NSArray<BICapturedVariable *> *vars = @[
-//        [[BICapturedVariable alloc] initWithOffset:32 kind:BICapturedVariableKindStrong mangledCxxClassName:nil]
-//    ];
-//    XCTAssertEqualObjects(bi.capturedVariables, vars);
-//}
+- (void)testCaptureCxx {
+    BIBlockInspector *bi = [[BIBlockInspector alloc] initWithBlock:GetCxxBlock()];
+    NSArray<BICapturedVariable *> *vars = @[
+        [[BIStrongCapturedVariable alloc] initWithOffset:32],
+        [[BIStrongCapturedVariable alloc] initWithOffset:40],
+        [[BIByrefCapturedVariable alloc] initWithOffset:48 valueOffset:48 valueSize:24],
+        [[BICxxCapturedVariable alloc] initWithOffset:56 mangledCxxClassName:@"_ZTSNSt3__112basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEE"],
+    ];
+    XCTAssertEqualObjects(bi.capturedVariables, vars);
+}
+
 
 @end
 

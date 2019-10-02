@@ -7,17 +7,21 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <vector>
 #import <string>
-//#import <BlockInspector/BlockInspector.h>
+#import <vector>
+#import "CxxSupport.h"
+#import "BIBlockInspector.h"
 
+extern "C" {
 id GetCxxBlock() {
+    BIRegisterCxxType(std::string);
     id x = @"x";
     id y = @"y";
-    std::vector<std::string> cxx;
+    std::string cxx;
+    __block std::string cyy;
     return ^{
-        NSLog(@"%@ %s %@", x, cxx[0].c_str(), y);
+        cyy = cxx;
+        NSLog(@"%@ %s %@", x, cxx.c_str(), y);
     };
 }
-
-//BIRegisterCxxType(std::vector<std::string>)
+}

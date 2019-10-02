@@ -18,10 +18,6 @@
     re; \
 })
 
-static BOOL AreEqual(id a, id b) {
-    return (a == b) || [a isEqual:b];
-}
-
 typedef struct {
     BIBlockDescriptor* blockDescriptor;
     BIBlockDescriptorHelperFunctions *helperFunctions;

@@ -19,7 +19,7 @@ extern "C" {
 
 NSString * BIDemangleCxxType(NSString *mangledName);
 BOOL BIGetTypeInfo(NSString *mangledName, struct TypeInfo *typeInfo);
-void BIRegisterTypeInfo(NSString *mangledName, struct TypeInfo typeInfo);
+void BIRegisterTypeInfo(id prototypeBlock, struct TypeInfo typeInfo);
 
 #ifdef __cplusplus
 }
@@ -28,7 +28,7 @@ void BIRegisterTypeInfo(NSString *mangledName, struct TypeInfo typeInfo);
 #import <functional>
 
 template<class T>
-class BIRegisterCxxType {
+class _BICxxRegistryHelper {
     static bool compare(void const * a, void const * b) {
         return *static_cast<T const *>(a) == *static_cast<T const *>(b);
     }
@@ -36,16 +36,21 @@ class BIRegisterCxxType {
     static size_t hash(void const * ptr) {
         return std::hash<T>()(*static_cast<T const*>(ptr));
     }
-    BIRegisterCxxType() {
-        NSString *name = [NSString stringWithUTF8String:typeid(T).name()];
-        BIRegisterTypeInfo(name, (TypeInfo){
+public:
+    _BICxxRegistryHelper(): _BICxxRegistryHelper(T()) {}
+    _BICxxRegistryHelper(T x) {
+        typedef void (*Func)(T const &);
+        id block = ^{ ((Func)nullptr)(x); };
+        BIRegisterTypeInfo(block, (TypeInfo){
             .size = sizeof(T),
-            .compare = &BIRegisterCxxType<T>::compare,
-            .hash = &BIRegisterCxxType<T>::hash
+            .compare = &_BICxxRegistryHelper<T>::compare,
+            .hash = &_BICxxRegistryHelper<T>::hash
         });
     };
 };
 
-#define BIRegisterCxxType(T) static BIRegisterCxxType<T> _biCxxType##__LINE__;
+#define _BIRegisterCxxType1(T, L) static _BICxxRegistryHelper<T> _biCxxType##L
+#define _BIRegisterCxxType2(T, L) _BIRegisterCxxType1(T, L)
+#define BIRegisterCxxType(T) _BIRegisterCxxType2(T, __LINE__)
 
 #endif
